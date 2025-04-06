@@ -1064,3 +1064,23 @@ export function updatePollVote<T extends GlobalState>(
     },
   });
 }
+
+
+
+export function updateMessageCount<T extends GlobalState>(
+  global: T,
+  chatId: string,
+  userId: string,
+): T {
+  const currentCount = global.chats[chatId]?.myMessageCount || 0;
+  return {
+    ...global,
+    chats: {
+      ...global.chats,
+      [chatId]: {
+        ...global.chats[chatId],
+        myMessageCount: currentCount + 1,
+      },
+    },
+  };
+}

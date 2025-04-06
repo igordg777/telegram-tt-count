@@ -1,6 +1,7 @@
 import type { FC } from '../../../lib/teact/teact';
 import React, { memo, useEffect, useMemo } from '../../../lib/teact/teact';
 import { getActions, withGlobal } from '../../../global';
+import styles from './Chat.module.css'
 
 import type {
   ApiChat,
@@ -322,6 +323,9 @@ const Chat: FC<OwnProps & StateProps> = ({
     className,
   );
 
+  const myMessageCount = chat.myMessageCount || 0;
+  // console.log('chat', { chat });
+
   return (
     <ListItem
       ref={ref}
@@ -399,6 +403,14 @@ const Chat: FC<OwnProps & StateProps> = ({
           )}
         </div>
       </div>
+
+      {/* Здесь количество сообщений */}
+      {isSelected && myMessageCount >= 0 && (
+        <div className={styles.сhat_messageCount}>
+          сессия - {myMessageCount}
+        </div>
+      )}
+
       {shouldRenderDeleteModal && (
         <DeleteChatModal
           isOpen={isDeleteModalOpen}
@@ -470,7 +482,10 @@ export default memo(withGlobal<OwnProps>(
     const lastMessageStory = storyData && selectPeerStory(global, storyData.peerId, storyData.id);
 
     return {
-      chat,
+      chat: {
+        ...chat,
+        myMessageCount: global.chats[chatId]?.myMessageCount || 0,
+      },
       isMuted: getIsChatMuted(chat, selectNotifyDefaults(global), selectNotifyException(global, chat.id)),
       lastMessageSender,
       draft: selectDraft(global, chatId, MAIN_THREAD_ID),

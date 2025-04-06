@@ -97,6 +97,7 @@ import {
   updateTopic,
   updateUploadByMessageKey,
   updateUserFullInfo,
+  updateMessageCount,
 } from '../../reducers';
 import { updateTabState } from '../../reducers/tabs';
 import {
@@ -300,7 +301,7 @@ addActionHandler('loadMessage', async (global, actions, payload): Promise<void> 
   }
 });
 
-addActionHandler('sendMessage', async (global, actions, payload): Promise<void> => {
+addActionHandler('sendMessage', async (global, actions, payload): Promise<ActionReturnType> => {
   const { messageList, tabId = getCurrentTabId() } = payload;
 
   const { storyId, peerId: storyPeerId } = selectCurrentViewedStory(global, tabId);
@@ -345,7 +346,7 @@ addActionHandler('sendMessage', async (global, actions, payload): Promise<void> 
   const lastMessageId = selectChatLastMessageId(global, chatId!);
   const messagePriceInStars = await getPeerStarsForMessage(global, chatId!);
 
-  const params : SendMessageParams = {
+  const params: SendMessageParams = {
     ...payload,
     chat,
     replyInfo,
@@ -471,6 +472,11 @@ addActionHandler('sendMessage', async (global, actions, payload): Promise<void> 
     }
   }
   if (localMessages?.length) sendMessagesWithNotification(global, localMessages);
+
+  global = getGlobal();
+  global = updateMessageCount(global, chatId!, global.currentUserId!);
+  setGlobal(global);
+
 });
 
 addActionHandler('sendInviteMessages', async (global, actions, payload): Promise<void> => {
@@ -678,7 +684,7 @@ addActionHandler('saveEffectInDraft', (global, actions, payload): ActionReturnTy
 
 async function saveDraft<T extends GlobalState>({
   global, chatId, threadId, draft, isLocalOnly, noLocalTimeUpdate,
-} : {
+}: {
   global: T; chatId: string; threadId: ThreadId; draft?: ApiDraft; isLocalOnly?: boolean; noLocalTimeUpdate?: boolean;
 }) {
   const chat = selectChat(global, chatId);
@@ -1696,7 +1702,7 @@ async function sendMessagesWithNotification<T extends GlobalState>(
 
   const localForwards = sendParams[0]?.forwardedLocalMessagesSlice?.localMessages;
   const firstMessage = sendParams[0]?.localMessage
-  || (localForwards && Object.values(localForwards)[0]);
+    || (localForwards && Object.values(localForwards)[0]);
   if (!firstMessage) return;
 
   const messagesCount = messageIdsForUndo.length;
